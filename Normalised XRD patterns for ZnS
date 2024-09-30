@@ -1,0 +1,85 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter1d
+
+# Function to load and normalize XRD data
+def load_and_normalize(file_path):
+    data = np.loadtxt(file_path)
+    theta = data[:, 0]  # 2θ values
+    intensity = data[:, 1]  # Intensity values
+    max_intensity = np.max(intensity)
+    if max_intensity == 0:
+        raise ValueError("Maximum intensity is zero, cannot normalize data.")
+    normalized_intensity = intensity / max_intensity
+    return theta, normalized_intensity
+
+# Load and normalize the XRD patterns
+file_paths = [
+    r'C:\Users\quinb\OneDrive\ZnS500C2V2H.xy',
+    r'C:\Users\quinb\OneDrive\ZnS700C2V2H.xy',
+    r'C:\Users\quinb\OneDrive\ZnS600C2V2Hwhite.xy',
+    r'C:\Users\quinb\OneDrive\ZnS600C2V2Hyellow.xy',
+    r'C:\Users\quinb\OneDrive\ZnS1000C2V2H.xy',
+]
+
+labels = [
+    'ZnS 500°C 2V 2H',
+    'ZnS 700°C 2V 2H',
+    'ZnS 600°C 2V 2H (white)',
+    'ZnS 600°C 2V 2H (yellow)',
+    'ZnS 1000°C 2V 2H',
+]
+
+colors = [
+    'red',
+    'orange',
+    'green',
+    'blue',
+    'purple',
+]
+
+# Displacement factor for each pattern
+displacement = 1
+
+# Create a figure with increased size
+plt.figure(figsize=(18, 12), dpi=300)  # Increase the figure size
+
+# Plot each XRD pattern and keep track of the plot handles and labels
+handles = []
+for i, (file_path, label, color) in enumerate(zip(file_paths, labels, colors)):
+    theta, normalized_intensity = load_and_normalize(file_path)
+
+    # Apply Gaussian filter
+    sigma = 2
+    smoothed_intensity = gaussian_filter1d(normalized_intensity, sigma)
+
+    # Displace the y-values by adding an offset
+    offset = i * displacement  # Apply increasing offset for each pattern
+    displaced_intensity = smoothed_intensity + offset
+
+    # Plot the data and store the handle
+    handle, = plt.plot(theta, displaced_intensity, linewidth=0.5, color=color, label=label)
+    handles.append(handle)
+
+# Set axis limits
+plt.xlim(20, 75)  # Set x-axis range for 2θ
+plt.ylim(0, len(file_paths) * displacement + 1)  # Adjust y-axis range to accommodate all patterns
+
+# Label axes and add title with reduced font size
+plt.xlabel('2θ (degrees)', fontsize=10)  # Adjust the x-axis label font size
+plt.ylabel('Intensity (a.u)', fontsize=10)  # Adjust the y-axis label font size
+plt.yticks(fontsize=8)  # Adjust the y-axis tick labels font size
+plt.xticks(fontsize=8)  # Adjust the x-axis tick labels font size
+plt.title('Comparison of Electro-synthesized ZnS', fontsize=10)  # Adjust the title font size
+
+# Invert the legend order and place it in the top-right corner
+plt.legend(handles=handles[::-1], labels=labels[::-1], fontsize=6, loc='upper right', bbox_to_anchor=(1, 1))
+
+# Add grid lines
+plt.grid(False)
+
+# Adjust layout to fit everything well and ensure x-axis labels are visible
+plt.tight_layout(pad=6.0)  # Increase padding to prevent cut-off
+
+# Show the plot
+plt.show()
